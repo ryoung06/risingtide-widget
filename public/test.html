@@ -7,11 +7,15 @@
       body { font-family: system-ui, sans-serif; padding: 40px; max-width: 700px; margin: 0 auto; }
       h1 { color: #0A6E76; }
     </style>
+    <script>
+      window.process = { env: { NODE_ENV: 'production' } };
+      window.global = window;
+    </script>
   </head>
   <body>
     <h1>Tide widget — test page</h1>
     <p>This is a Cloudflare-hosted test page for the Rising Tide chatbot. Click the launcher in the bottom-right corner to test the widget.</p>
     <p>Try asking: <em>"Do you have kayak openings this Saturday for 2 adults?"</em></p>
-    <script src="/widget.js"></script>
+    <script src="/widget.js?v=3"></script>
   </body>
 </html>
