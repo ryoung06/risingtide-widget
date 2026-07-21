@@ -12,10 +12,10 @@ function mount() {
       <Widget
         options={{ token: WIDGET_TOKEN }}
         components={[
-          {
-            key: 'fareHarborActionCheckAvailability',
-            component: TourAvailabilityCard,
-          },
+          { key: 'fare_harbor_action_check_availability', component: TourAvailabilityCard },
+          { key: 'fareHarborActionCheckAvailability', component: TourAvailabilityCard },
+          { key: 'check_availability', component: TourAvailabilityCard },
+          { key: 'checkAvailability', component: TourAvailabilityCard },
         ]}
       />
     </StrictMode>
