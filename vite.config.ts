@@ -5,8 +5,6 @@ export default defineConfig({
   publicDir: 'public',
   define: {
     'process.env.NODE_ENV': '"production"',
-    'process.env': '({})',
-    process: '({env:{NODE_ENV:"production"}})',
   },
   build: {
     copyPublicDir: true,
@@ -17,7 +15,10 @@ export default defineConfig({
       formats: ['iife'],
     },
     rollupOptions: {
-      output: { inlineDynamicImports: true },
+      output: {
+        inlineDynamicImports: true,
+        intro: 'var process = { env: { NODE_ENV: "production" } };',
+      },
     },
   },
 });
