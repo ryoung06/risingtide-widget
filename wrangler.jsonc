@@ -1,6 +1,9 @@
 {
   "name": "risingtide-widget",
   "compatibility_date": "2025-01-01",
+  "observability": {
+    "enabled": false
+  },
   "assets": {
     "directory": "./dist"
   }
