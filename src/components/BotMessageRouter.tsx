@@ -4,14 +4,17 @@ import { PaymentLinkCard } from './PaymentLinkCard';
 import { IntakeForm } from './IntakeForm';
 export function BotMessageRouter(props: any) {
   const action = props?.data?.action;
-  const message = (props?.data?.message || '').trim();
+  const rawMessage = props?.data?.message || '';
+  const message = rawMessage.trim();
   console.log('[BotMessageRouter]', {
     actionName: action?.name,
-    hasAction: !!action?.data,
-    messagePreview: message.slice(0, 60),
+    rawLength: rawMessage.length,
+    messageStart: message.slice(0, 120),
+    charCodes: message.slice(0, 20).split('').map((c: string) => c.charCodeAt(0)),
+    hasIntakeMarker: /INTAKE[_\s]*FORM/i.test(message),
   });
-  // Intake form marker
-  if (message === '<<INTAKE_FORM>>' || message.includes('<<INTAKE_FORM>>')) {
+  // Detect intake form marker — permissive to catch AI variations
+  if (/INTAKE[_\s]*FORM/i.test(message)) {
     return <IntakeForm />;
   }
   const hasSlots = Array.isArray(action?.data?.data) && action.data.data.length > 0;
