@@ -2,9 +2,22 @@ import { Markdown } from './Markdown';
 import { TourAvailabilityCard } from './TourAvailabilityCard';
 import { PaymentLinkCard } from './PaymentLinkCard';
 import { IntakeForm } from './IntakeForm';
+import { AvailabilityResultsCard } from './AvailabilityResultsCard';
+const AVAIL_MARKER = /<<AVAIL_RESULTS>>([\s\S]*?)<<END>>/;
 export function BotMessageRouter(props: any) {
   const action = props?.data?.action;
   const message = (props?.data?.message || '').trim();
+  // Multi-tour availability marker — check FIRST
+  const availMatch = message.match(AVAIL_MARKER);
+  if (availMatch) {
+    try {
+      const results = JSON.parse(availMatch[1]);
+      const lead = message.replace(AVAIL_MARKER, '').trim();
+      return <AvailabilityResultsCard results={results} lead={lead} />;
+    } catch {
+      // fall through to plain render if JSON is malformed
+    }
+  }
   if (/INTAKE[_\s]*FORM/i.test(message)) {
     return <IntakeForm />;
   }
