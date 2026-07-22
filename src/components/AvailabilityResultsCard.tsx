@@ -12,7 +12,7 @@ type Result = {
 export function AvailabilityResultsCard({ results, lead }: { results: Result[]; lead?: string }) {
   const { sendMessage } = useMessages();
   const book = async (r: Result) => {
-    const msg = `Get payment link for ${r.tour} on ${r.date} at ${r.time} (availability_pk: ${r.availability_pk})`;
+    const msg = 'Get payment link for ' + r.tour + ' on ' + r.date + ' at ' + r.time + ' (availability_pk: ' + r.availability_pk + ')';
     try {
       await (sendMessage as any)({ content: msg });
     } catch (e1) {
@@ -58,7 +58,7 @@ export function AvailabilityResultsCard({ results, lead }: { results: Result[]; 
             <div style={{ padding: '0 14px 8px' }}>
               {g.slots.map((s, si) => (
                 <div
-                  key={`${s.availability_pk}-${si}`}
+                  key={s.availability_pk + '-' + si}
                   style={{
                     display: 'flex',
                     justifyContent: 'space-between',
