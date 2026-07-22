@@ -1,15 +1,19 @@
 import { Markdown } from './Markdown';
 import { TourAvailabilityCard } from './TourAvailabilityCard';
 import { PaymentLinkCard } from './PaymentLinkCard';
+import { IntakeForm } from './IntakeForm';
 export function BotMessageRouter(props: any) {
   const action = props?.data?.action;
-  const message = props?.data?.message || '';
+  const message = (props?.data?.message || '').trim();
   console.log('[BotMessageRouter]', {
     actionName: action?.name,
-    actionData: action?.data,
-    messagePreview: message.slice(0, 100),
+    hasAction: !!action?.data,
+    messagePreview: message.slice(0, 60),
   });
-  // Only route to the availability card if we actually have a slots array
+  // Intake form marker
+  if (message === '<<INTAKE_FORM>>' || message.includes('<<INTAKE_FORM>>')) {
+    return <IntakeForm />;
+  }
   const hasSlots = Array.isArray(action?.data?.data) && action.data.data.length > 0;
   if (action?.name === 'fare_harbor_action_check_availability' && hasSlots) {
     return <TourAvailabilityCard {...props} />;
