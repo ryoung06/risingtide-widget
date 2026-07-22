@@ -10,7 +10,22 @@ function mount() {
   createRoot(container).render(
     <StrictMode>
       <Widget
-        options={{ token: WIDGET_TOKEN }}
+        options={{
+          token: WIDGET_TOKEN,
+          bot: { name: 'Tide' },
+          initialMessages: [
+            "Hi! I'm Tide, the digital concierge for Rising Tide Explorers. Ask me anything about our tours, or pick one below to get started.",
+          ],
+          initialQuestions: [
+            'Kayak Tours',
+            'Boat Tours',
+            'Rentals',
+            'Shop Outdoor Gear',
+            'Check Availability',
+          ],
+          initialQuestionsPosition: 'welcome',
+          theme: { primaryColor: '#0A6E76' },
+        }}
         components={[
           { key: 'bot_message', component: BotMessageRouter },
         ]}
