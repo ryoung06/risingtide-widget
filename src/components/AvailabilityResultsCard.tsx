@@ -16,7 +16,9 @@ export function AvailabilityResultsCard({ results, lead }: { results: Result[]; 
     try {
       await (sendMessage as any)({ content: msg });
     } catch (e1) {
-      try { await (sendMessage as any)(msg); } catch (e2) {
+      try {
+        await (sendMessage as any)(msg);
+      } catch (e2) {
         console.error('[AvailabilityResultsCard] sendMessage failed', e1, e2);
       }
     }
@@ -56,19 +58,34 @@ export function AvailabilityResultsCard({ results, lead }: { results: Result[]; 
             </div>
             <div style={{ padding: '0 14px 8px' }}>
               {g.slots.map((s, si) => (
-                <div key={`${s.availability_pk}-${si}`} style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '8px 0',
-                  borderTop: si === 0 ? '1px solid #F5F5F4' : '1px solid #F5F5F4',
-                }}>
+                <div
+                  key={`${s.availability_pk}-${si}`}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '8px 0',
+                    borderTop: '1px solid #F5F5F4',
+                  }}
+                >
                   <div style={{ fontSize: 13 }}>
                     <span style={{ fontWeight: 600 }}>{s.date}</span>
                     <span style={{ color: '#78716C' }}> · {s.time} · {s.seats} open</span>
                   </div>
-                  <button type="button" onClick={() => book(s)} style={{
-                    background: '#0A6E76', color: 'white', border: 'none',
-                    padding: '5px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                  }}>
+                  <button
+                    type="button"
+                    onClick={() => book(s)}
+                    style={{
+                      background: '#0A6E76',
+                      color: 'white',
+                      border: 'none',
+                      padding: '5px 10px',
+                      borderRadius: 6,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
                     Book →
                   </button>
                 </div>
@@ -76,20 +93,19 @@ export function AvailabilityResultsCard({ results, lead }: { results: Result[]; 
             </div>
           </div>
         );
-        })}
-      <div style={{
-        padding: '10px 14px',
-        borderTop: '1px solid #E7E5E4',
-        background: '#F5F5F4',
-        fontSize: 12,
-        color: '#57534E',
-        lineHeight: 1.5,
-      }}>
+      })}
+      <div
+        style={{
+          padding: '10px 14px',
+          borderTop: '1px solid #E7E5E4',
+          background: '#F5F5F4',
+          fontSize: 12,
+          color: '#57534E',
+          lineHeight: 1.5,
+        }}
+      >
         Don't see the tour you were looking for? Tell me which one you're interested in and I'll find availability closest to your dates.
       </div>
-    </div>
-  );
-}
     </div>
   );
 }
