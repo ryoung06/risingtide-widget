@@ -12,9 +12,9 @@ function mount() {
       <Widget
         options={{
           token: WIDGET_TOKEN,
-          bot: { name: 'Tide' },
+          bot: { name: 'RTE Adventure Bot' },
           initialMessages: [
-            "Hi! I'm Tide, the digital concierge for Rising Tide Explorers. Ask me anything about our tours, or pick one below to get started.",
+            "Hi! I'm the RTE Adventure Bot. Ask me anything about our tours, or pick one below to get started.",
           ],
           initialQuestions: [
             'Kayak Tours',
