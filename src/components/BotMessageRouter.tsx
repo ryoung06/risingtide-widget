@@ -7,6 +7,13 @@ const AVAIL_MARKER = /<<AVAIL_RESULTS>>([\s\S]*?)<<END>>/;
 export function BotMessageRouter(props: any) {
   const action = props?.data?.action;
   const message = (props?.data?.message || '').trim();
+  // TEMP DEBUG — remove after logging one availability payload
+  if (action?.name === 'fare_harbor_action_check_availability') {
+    console.log('[FH AVAIL PAYLOAD]', JSON.stringify(action, null, 2));
+  }
+  if (action?.name === 'fare_harbor_action_get_payment_link') {
+    console.log('[FH PAYMENT PAYLOAD]', JSON.stringify(action, null, 2));
+  }
   // Multi-tour availability marker — check FIRST
   const availMatch = message.match(AVAIL_MARKER);
   if (availMatch) {
