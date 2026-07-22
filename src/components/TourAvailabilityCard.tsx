@@ -1,41 +1,22 @@
-import { WidgetComponentProps } from '@opencx/widget-react-headless';
 type Slot = {
   availability_pk: number;
   start_at: string;
   end_at: string;
   capacity: number;
-  ticket_types: Array<{
-    customer_type_rate_pk: number;
-    type: string;
-    price: string;
-    capacity: number;
-  }>;
-};
-type Payload = {
-  status?: 'success' | 'error';
-  data?: Slot[];
-  message?: string;
+  ticket_types: Array<{ customer_type_rate_pk: number; type: string; price: string; capacity: number }>;
 };
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 const fmtDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
-export function TourAvailabilityCard(props: WidgetComponentProps<Payload>) {
-  // Diagnostic: log full props so we can see what shape data arrives in
-  console.log('[TourAvailabilityCard] props:', props);
-  const payload = (props as any)?.data?.action?.data;
-  if (!payload) {
-    return <div style={{ padding: 12, fontSize: 12, color: '#999' }}>[card mounted, no payload]</div>;
-  }
-  const slots = payload.data;
-  if (payload.status === 'error' || !slots || slots.length === 0) {
+  new Date(iso).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+export function TourAvailabilityCard(props: any) {
+  const payload = props?.data?.action?.data;
+  const message = props?.data?.message;
+  const slots: Slot[] | undefined = payload?.data;
+  if (!slots || slots.length === 0) {
     return (
-      <div style={{ padding: '12px 16px', borderRadius: 12, background: '#F5F5F4', color: '#57534E', fontSize: 14 }}>
-        {payload.message || 'No openings for that date.'}
+      <div style={{ padding: '10px 14px', background: '#F5F5F4', borderRadius: 12, fontSize: 14, whiteSpace: 'pre-wrap' }}>
+        {message || payload?.message || 'No openings for that date.'}
       </div>
     );
   }
@@ -45,7 +26,7 @@ export function TourAvailabilityCard(props: WidgetComponentProps<Payload>) {
         {fmtDate(slots[0].start_at)}
       </div>
       <div style={{ padding: '4px 14px' }}>
-        {slots.map((slot: Slot) => {
+        {slots.map((slot) => {
           const total = slot.ticket_types.reduce((s, t) => s + t.capacity, 0);
           const summary = slot.ticket_types.map((t) => `${t.capacity} ${t.type.toLowerCase()}`).join(', ');
           return (
@@ -61,6 +42,11 @@ export function TourAvailabilityCard(props: WidgetComponentProps<Payload>) {
           );
         })}
       </div>
+      {message && (
+        <div style={{ padding: '8px 14px', fontSize: 13, color: '#57534E', borderTop: '1px solid #F5F5F4' }}>
+          {message}
+        </div>
+      )}
     </div>
   );
 }
