@@ -1,3 +1,5 @@
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { TourAvailabilityCard } from './TourAvailabilityCard';
 import { PaymentLinkCard } from './PaymentLinkCard';
 export function BotMessageRouter(props: any) {
@@ -6,7 +8,6 @@ export function BotMessageRouter(props: any) {
   console.log('[BotMessageRouter]', {
     actionName: action?.name,
     hasActionData: !!action?.data,
-    actionDataKeys: action?.data ? Object.keys(action.data) : null,
     messagePreview: message.slice(0, 80),
   });
   if (action?.name === 'fare_harbor_action_check_availability') {
@@ -15,8 +16,6 @@ export function BotMessageRouter(props: any) {
   if (action?.name === 'fare_harbor_action_get_payment_link') {
     return <PaymentLinkCard {...props} />;
   }
-  // Auto-linkify URLs in plain text fallback
-  const parts = message.split(/(https?:\/\/[^\s]+)/g);
   return (
     <div style={{
       padding: '10px 14px',
@@ -24,13 +23,21 @@ export function BotMessageRouter(props: any) {
       borderRadius: 12,
       fontSize: 14,
       lineHeight: 1.5,
-      whiteSpace: 'pre-wrap',
     }}>
-      {parts.map((p: string, i: number) =>
-        /^https?:\/\//.test(p)
-          ? <a key={i} href={p} target="_blank" rel="noopener noreferrer" style={{ color: '#0A6E76', textDecoration: 'underline' }}>{p}</a>
-          : <span key={i}>{p}</span>
-      )}
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          a: ({ href, children }) => (
+            <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: '#0A6E76', textDecoration: 'underline' }}>{children}</a>
+          ),
+          p: ({ children }) => <p style={{ margin: '0 0 8px' }}>{children}</p>,
+          ul: ({ children }) => <ul style={{ margin: '4px 0 8px', paddingLeft: 18 }}>{children}</ul>,
+          li: ({ children }) => <li style={{ margin: '2px 0' }}>{children}</li>,
+          strong: ({ children }) => <strong style={{ fontWeight: 600 }}>{children}</strong>,
+        }}
+      >
+        {message}
+      </ReactMarkdown>
     </div>
   );
 }
