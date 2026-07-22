@@ -11,15 +11,22 @@ export function IntakeForm() {
   const [adults, setAdults] = useState(2);
   const [kidsUnder12, setKidsUnder12] = useState(0);
   const [tourType, setTourType] = useState<TourType>('kayak');
-  // Grab all likely hooks and log their shapes
   const messagesHook: any = tryHook(useMessages);
   const widgetHook: any = tryHook(useWidget);
   const sessionsHook: any = tryHook(useSessions);
-  console.log('[IntakeForm] useMessages keys:', messagesHook && Object.keys(messagesHook));
-  console.log('[IntakeForm] useMessages full:', messagesHook);
-  console.log('[IntakeForm] useWidget keys:', widgetHook && Object.keys(widgetHook));
-  console.log('[IntakeForm] useWidget full:', widgetHook);
-  console.log('[IntakeForm] useSessions keys:', sessionsHook && Object.keys(sessionsHook));
+  // Deep exploration
+  console.log('[V12] useMessages:', messagesHook, 'keys:', messagesHook && Object.keys(messagesHook));
+  console.log('[V12] useWidget:', widgetHook, 'keys:', widgetHook && Object.keys(widgetHook));
+  if (widgetHook?.widgetCtx) {
+    console.log('[V12] widgetCtx keys:', Object.keys(widgetHook.widgetCtx));
+    if (widgetHook.widgetCtx.api) {
+      const api = widgetHook.widgetCtx.api;
+      console.log('[V12] api keys:', Object.keys(api));
+      console.log('[V12] api prototype methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(api) || {}));
+    }
+  }
+  console.log('[V12] useSessions:', sessionsHook, 'keys:', sessionsHook && Object.keys(sessionsHook));
+  console.log('[V12] iframe ref:', widgetHook?.contentIframeRef?.current);
   const stepper = (value: number, setValue: (n: number) => void, min = 0, max = 20) => (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
       <button type="button" onClick={() => setValue(Math.max(min, value - 1))}
@@ -48,46 +55,90 @@ export function IntakeForm() {
     const kidText = kidsUnder12 > 0 ? ` and ${kidsUnder12} ${kidsUnder12 === 1 ? 'child' : 'children'} under 12` : '';
     return `Check availability for ${typeText} ${dateText}. Party: ${adults} ${adults === 1 ? 'adult' : 'adults'}${kidText}. Show me every tour with openings.`;
   };
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const message = buildMessage();
-    // Try every plausible method on every hook
-    const candidates: Array<{ path: string; fn: any }> = [];
-    const collect = (obj: any, prefix: string) => {
-      if (!obj || typeof obj !== 'object') return;
-      Object.entries(obj).forEach(([k, v]) => {
-        if (typeof v === 'function' && /send|create|submit|add|post/i.test(k)) {
-          candidates.push({ path: `${prefix}.${k}`, fn: v });
-        }
-      });
-    };
-    collect(messagesHook, 'messages');
-    collect(widgetHook, 'widget');
-    collect(sessionsHook, 'sessions');
-    console.log('[IntakeForm] send candidates:', candidates.map(c => c.path));
-    for (const c of candidates) {
-      try {
-        console.log('[IntakeForm] trying:', c.path);
-        // Common shapes: fn(string), fn({content: string}), fn({message: string}), fn({text: string})
+    // Path 1: try widgetCtx.api methods
+    const api = widgetHook?.widgetCtx?.api;
+    if (api) {
+      const apiMethods = [
+        ...Object.keys(api),
+        ...Object.getOwnPropertyNames(Object.getPrototypeOf(api) || {}),
+      ];
+      console.log('[V12] All api methods:', apiMethods);
+      for (const m of apiMethods) {
+        if (typeof api[m] !== 'function') continue;
+        if (!/send|create|submit|post|message/i.test(m)) continue;
+        console.log('[V12] trying api.' + m);
         const attempts = [
-          () => c.fn(message),
-          () => c.fn({ content: message }),
-          () => c.fn({ message }),
-          () => c.fn({ text: message }),
-          () => c.fn({ body: message }),
+          () => api[m](message),
+          () => api[m]({ content: message }),
+          () => api[m]({ message }),
+          () => api[m]({ text: message }),
+          () => api[m]({ content: message, type: 'USER' }),
         ];
         for (const a of attempts) {
           try {
-            const r = a();
-            // Some return promises, some return void — assume success if no throw
-            console.log('[IntakeForm] success via', c.path, 'returned', r);
+            const r = await a();
+            console.log('[V12] SUCCESS via api.' + m, r);
             return;
-          } catch (e) { /* try next shape */ }
+          } catch (e: any) {
+            console.log('[V12] api.' + m + ' attempt failed:', e?.message || e);
+          }
         }
-      } catch (e) {
-        console.warn('[IntakeForm] failed', c.path, e);
       }
     }
-    alert('Could not find a way to send. Please copy and paste this into the chat:\n\n' + message);
+    // Path 2: try widgetCtx top-level methods
+    const ctx = widgetHook?.widgetCtx;
+    if (ctx) {
+      const ctxMethods = [...Object.keys(ctx), ...Object.getOwnPropertyNames(Object.getPrototypeOf(ctx) || {})];
+      console.log('[V12] widgetCtx methods:', ctxMethods);
+      for (const m of ctxMethods) {
+        if (typeof ctx[m] !== 'function') continue;
+        if (!/send|create|submit|post/i.test(m)) continue;
+        console.log('[V12] trying widgetCtx.' + m);
+        try {
+          await ctx[m](message);
+          console.log('[V12] SUCCESS via widgetCtx.' + m);
+          return;
+        } catch (e: any) { console.log('[V12] failed:', e?.message); }
+        try {
+          await ctx[m]({ content: message });
+          console.log('[V12] SUCCESS via widgetCtx.' + m + ' (object)');
+          return;
+        } catch (e: any) { console.log('[V12] failed:', e?.message); }
+      }
+    }
+    // Path 3: reach into the iframe and drive its input
+    const iframe = widgetHook?.contentIframeRef?.current as HTMLIFrameElement | undefined;
+    if (iframe && iframe.contentDocument) {
+      console.log('[V12] trying iframe DOM path');
+      const doc = iframe.contentDocument;
+      const inputs = doc.querySelectorAll<HTMLElement>('textarea, input[type="text"], [contenteditable="true"], [role="textbox"]');
+      console.log('[V12] iframe inputs found:', inputs.length);
+      if (inputs.length > 0) {
+        const el = inputs[inputs.length - 1] as HTMLTextAreaElement;
+        const proto = el.tagName === 'TEXTAREA'
+          ? iframe.contentWindow!.HTMLTextAreaElement.prototype
+          : iframe.contentWindow!.HTMLInputElement.prototype;
+        const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+        setter?.call(el, message);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        requestAnimationFrame(() => {
+          el.focus();
+          ['keydown', 'keypress', 'keyup'].forEach(t => {
+            el.dispatchEvent(new (iframe.contentWindow as any).KeyboardEvent(t, { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+          });
+          const form = el.closest('form');
+          if (form) (form as any).requestSubmit?.();
+          const btns = Array.from(doc.querySelectorAll<HTMLButtonElement>('button'));
+          const sendBtn = btns.find((b) => /send/i.test(b.getAttribute('aria-label') || b.textContent || ''));
+          sendBtn?.click();
+        });
+        console.log('[V12] iframe input driven');
+        return;
+      }
+    }
+    alert('Still could not send automatically. Please copy this and paste into the chat:\n\n' + message);
   };
   return (
     <div style={{ border: '1px solid #E7E5E4', borderRadius: 12, overflow: 'hidden', background: 'white' }}>
