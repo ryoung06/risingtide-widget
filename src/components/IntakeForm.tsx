@@ -40,18 +40,15 @@ export function IntakeForm() {
     const typeText = tourType === 'kayak' ? 'kayak tours' : tourType === 'boat' ? 'boat tours' : 'kayak and boat tours';
     const kidText = kidsUnder12 > 0 ? ` and ${kidsUnder12} ${kidsUnder12 === 1 ? 'child' : 'children'} under 12` : '';
     const message = `Check availability for ${typeText} ${dateText}. Party: ${adults} ${adults === 1 ? 'adult' : 'adults'}${kidText}. Show me every tour with openings.`;
-    console.log('[IntakeForm] sending via useMessages.sendMessage');
     try {
-      // sendMessage typically takes an object with { content }
       await (sendMessage as any)({ content: message });
       setSubmitted(true);
     } catch (e1) {
       try {
-        // Fallback shape: raw string
         await (sendMessage as any)(message);
         setSubmitted(true);
       } catch (e2) {
-        console.error('[IntakeForm] sendMessage failed both shapes', e1, e2);
+        console.error('[IntakeForm] sendMessage failed', e1, e2);
         alert('Could not send. Please copy and paste into the chat:\n\n' + message);
       }
     }
