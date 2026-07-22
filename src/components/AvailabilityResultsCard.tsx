@@ -76,7 +76,20 @@ export function AvailabilityResultsCard({ results, lead }: { results: Result[]; 
             </div>
           </div>
         );
-      })}
+        })}
+      <div style={{
+        padding: '10px 14px',
+        borderTop: '1px solid #E7E5E4',
+        background: '#F5F5F4',
+        fontSize: 12,
+        color: '#57534E',
+        lineHeight: 1.5,
+      }}>
+        Don't see the tour you were looking for? Tell me which one you're interested in and I'll find availability closest to your dates.
+      </div>
+    </div>
+  );
+}
     </div>
   );
 }
