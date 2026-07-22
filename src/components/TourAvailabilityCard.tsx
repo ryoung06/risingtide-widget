@@ -1,3 +1,4 @@
+import { Markdown } from './Markdown';
 type Slot = {
   availability_pk: number;
   start_at: string;
@@ -5,18 +6,16 @@ type Slot = {
   capacity: number;
   ticket_types: Array<{ customer_type_rate_pk: number; type: string; price: string; capacity: number }>;
 };
-const fmtTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-const fmtDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 export function TourAvailabilityCard(props: any) {
   const payload = props?.data?.action?.data;
   const message = props?.data?.message;
   const slots: Slot[] | undefined = payload?.data;
   if (!slots || slots.length === 0) {
     return (
-      <div style={{ padding: '10px 14px', background: '#F5F5F4', borderRadius: 12, fontSize: 14, whiteSpace: 'pre-wrap' }}>
-        {message || payload?.message || 'No openings for that date.'}
+      <div style={{ padding: '10px 14px', background: '#F5F5F4', borderRadius: 12, fontSize: 14 }}>
+        <Markdown>{message || payload?.message || 'No openings for that date.'}</Markdown>
       </div>
     );
   }
@@ -43,8 +42,8 @@ export function TourAvailabilityCard(props: any) {
         })}
       </div>
       {message && (
-        <div style={{ padding: '8px 14px', fontSize: 13, color: '#57534E', borderTop: '1px solid #F5F5F4' }}>
-          {message}
+        <div style={{ padding: '10px 14px', fontSize: 13, color: '#57534E', borderTop: '1px solid #F5F5F4', lineHeight: 1.5 }}>
+          <Markdown>{message}</Markdown>
         </div>
       )}
     </div>
