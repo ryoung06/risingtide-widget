@@ -4,17 +4,29 @@ import { PaymentLinkCard } from './PaymentLinkCard';
 import { IntakeForm } from './IntakeForm';
 import { AvailabilityResultsCard } from './AvailabilityResultsCard';
 const AVAIL_MARKER = /<<AVAIL_RESULTS>>([\s\S]*?)<<END>>/;
-// Tightened: only match the exact standalone marker, not the words "intake form" in prose
 const INTAKE_MARKER = /^\s*<<\s*INTAKE[_\s]*FORM\s*>>\s*$|^\s*\[\[\s*INTAKE[_\s]*FORM\s*\]\]\s*$/i;
+// Some action responses arrive with `data` as a JSON string instead of an object — normalize
+function normalizeAction(action: any) {
+  if (!action) return action;
+  const raw = action.data;
+  if (typeof raw === 'string') {
+    try {
+      return { ...action, data: JSON.parse(raw) };
+    } catch {
+      return action;
+    }
+  }
+  return action;
+}
 export function BotMessageRouter(props: any) {
-  const action = props?.data?.action;
+  const rawAction = props?.data?.action;
+  const action = normalizeAction(rawAction);
   const message = (props?.data?.message || '').trim();
-  // DEBUG — log every bot message so we can see all action shapes
   console.log('[BOT MSG]', {
     hasAction: !!action,
     actionName: action?.name,
     actionStatus: action?.data?.status,
-    actionKeys: action?.data ? Object.keys(action.data) : null,
+    dataWasString: typeof rawAction?.data === 'string',
     messageLen: message.length,
     messagePreview: message.slice(0, 120),
     matchesIntakeMarker: INTAKE_MARKER.test(message),
@@ -36,16 +48,16 @@ export function BotMessageRouter(props: any) {
       // fall through
     }
   }
-  // Tightened intake match — only fires on standalone marker
   if (INTAKE_MARKER.test(message)) {
     return <IntakeForm />;
   }
   const hasSlots = Array.isArray(action?.data?.data) && action.data.data.length > 0;
   if (action?.name === 'fare_harbor_action_check_availability' && hasSlots) {
-    return <TourAvailabilityCard {...props} />;
+    // pass the NORMALIZED action back into the card
+    return <TourAvailabilityCard {...props} data={{ ...props.data, action }} />;
   }
   if (action?.name === 'fare_harbor_action_get_payment_link' && action?.data?.data?.payment_link) {
-    return <PaymentLinkCard {...props} />;
+    return <PaymentLinkCard {...props} data={{ ...props.data, action }} />;
   }
   return (
     <div style={{ padding: '10px 14px', background: '#F5F5F4', borderRadius: 12, fontSize: 14, lineHeight: 1.5 }}>
