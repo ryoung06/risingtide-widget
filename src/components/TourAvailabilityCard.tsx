@@ -1,27 +1,35 @@
 import { useMessages } from '@opencx/widget-react-headless';
 import { Markdown } from './Markdown';
-import { getTourPhoto } from '../data/tourPhotos';
+import { getTourPhoto, TOUR_PHOTOS } from '../data/tourPhotos';
 const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 const fmtDateShort = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+// Extract tour name from AI message text by matching against known catalog
+function extractTourName(message: string): string | undefined {
+  if (!message) return undefined;
+  const lower = message.toLowerCase();
+  // Also match punctuation variants — AI may write "Mangrove Tunnels and Mudflats" instead of "&"
+  for (const name of Object.keys(TOUR_PHOTOS)) {
+    const candidates = [
+      name.toLowerCase(),
+      name.toLowerCase().replace(' & ', ' and '),
+      name.toLowerCase().replace("'", ''),
+      name.toLowerCase().replace("'s", 's'),
+    ];
+    if (candidates.some(c => lower.includes(c))) return name;
+  }
+  return undefined;
+}
 export function TourAvailabilityCard(props: any) {
   const actionData = props?.data?.action?.data;
-  const message = props?.data?.message;
+  const message = props?.data?.message || '';
   const { sendMessage } = useMessages();
   const slots: any[] | undefined =
     Array.isArray(actionData?.data) ? actionData.data
     : Array.isArray(actionData) ? actionData
     : Array.isArray(actionData?.data?.data) ? actionData.data.data
     : undefined;
-  // Defensive tour-name lookup — tries several common shapes
-  const tourName =
-    actionData?.item?.name
-    || actionData?.data?.item?.name
-    || slots?.[0]?.item?.name
-    || slots?.[0]?.headline
-    || actionData?.tour_name
-    || actionData?.data?.tour_name
-    || undefined;
+  const tourName = extractTourName(message);
   const photo = getTourPhoto(tourName);
   const book = async (slot: any) => {
     const time = fmtTime(slot.start_at);
@@ -31,9 +39,7 @@ export function TourAvailabilityCard(props: any) {
     try {
       await (sendMessage as any)({ content: msg });
     } catch (e1) {
-      try {
-        await (sendMessage as any)(msg);
-      } catch (e2) {
+      try { await (sendMessage as any)(msg); } catch (e2) {
         console.error('[TourAvailabilityCard] sendMessage failed', e1, e2);
       }
     }
