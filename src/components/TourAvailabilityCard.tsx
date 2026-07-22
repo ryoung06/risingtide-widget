@@ -1,21 +1,23 @@
 import { Markdown } from './Markdown';
-type Slot = {
-  availability_pk: number;
-  start_at: string;
-  end_at: string;
-  capacity: number;
-  ticket_types: Array<{ customer_type_rate_pk: number; type: string; price: string; capacity: number }>;
-};
 const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 export function TourAvailabilityCard(props: any) {
-  const payload = props?.data?.action?.data;
+  const actionData = props?.data?.action?.data;
   const message = props?.data?.message;
-  const slots: Slot[] | undefined = payload?.data;
+  console.log('[TourAvailabilityCard] actionData shape:', {
+    topLevelKeys: actionData ? Object.keys(actionData) : null,
+    fullActionData: actionData,
+  });
+  // Try multiple shapes: action.data.data (nested), action.data (direct array), or action.data.data.data
+  const slots: any[] | undefined =
+    Array.isArray(actionData?.data) ? actionData.data
+    : Array.isArray(actionData) ? actionData
+    : Array.isArray(actionData?.data?.data) ? actionData.data.data
+    : undefined;
   if (!slots || slots.length === 0) {
     return (
-      <div style={{ padding: '10px 14px', background: '#F5F5F4', borderRadius: 12, fontSize: 14 }}>
-        <Markdown>{message || payload?.message || 'No openings for that date.'}</Markdown>
+      <div style={{ padding: '10px 14px', background: '#F5F5F4', borderRadius: 12, fontSize: 14, lineHeight: 1.5 }}>
+        <Markdown>{message || actionData?.message || 'No openings for that date.'}</Markdown>
       </div>
     );
   }
@@ -25,9 +27,9 @@ export function TourAvailabilityCard(props: any) {
         {fmtDate(slots[0].start_at)}
       </div>
       <div style={{ padding: '4px 14px' }}>
-        {slots.map((slot) => {
-          const total = slot.ticket_types.reduce((s, t) => s + t.capacity, 0);
-          const summary = slot.ticket_types.map((t) => `${t.capacity} ${t.type.toLowerCase()}`).join(', ');
+        {slots.map((slot: any) => {
+          const total = (slot.ticket_types || []).reduce((s: number, t: any) => s + (t.capacity || 0), 0);
+          const summary = (slot.ticket_types || []).map((t: any) => `${t.capacity} ${t.type.toLowerCase()}`).join(', ');
           return (
             <div key={slot.availability_pk} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #F5F5F4' }}>
               <div>
