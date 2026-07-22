@@ -4,11 +4,6 @@ const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { wee
 export function TourAvailabilityCard(props: any) {
   const actionData = props?.data?.action?.data;
   const message = props?.data?.message;
-  console.log('[TourAvailabilityCard] actionData shape:', {
-    topLevelKeys: actionData ? Object.keys(actionData) : null,
-    fullActionData: actionData,
-  });
-  // Try multiple shapes: action.data.data (nested), action.data (direct array), or action.data.data.data
   const slots: any[] | undefined =
     Array.isArray(actionData?.data) ? actionData.data
     : Array.isArray(actionData) ? actionData
