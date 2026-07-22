@@ -24,7 +24,6 @@ export function AvailabilityResultsCard({ results, lead }: { results: Result[]; 
     }
   };
   if (!results?.length) return null;
-  // Group by tour name, preserving first-appearance order
   const groups: { tour: string; slots: Result[] }[] = [];
   const seen: Record<string, number> = {};
   for (const r of results) {
