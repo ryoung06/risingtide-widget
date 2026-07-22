@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@opencx/widget-react": "latest",
+    "@opencx/widget-react-headless": "latest",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
