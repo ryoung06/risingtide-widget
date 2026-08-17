@@ -4,8 +4,7 @@ import { PaymentLinkCard } from './PaymentLinkCard';
 import { IntakeForm } from './IntakeForm';
 import { AvailabilityResultsCard } from './AvailabilityResultsCard';
 const AVAIL_MARKER = /<<AVAIL_RESULTS>>([\s\S]*?)<<END>>/;
-const INTAKE_MARKER = /^\s*<<\s*INTAKE[_\s]*FORM\s*>>\s*$|^\s*\[\[\s*INTAKE[_\s]*FORM\s*\]\]\s*$/i;
-// Some action responses arrive with `data` as a JSON string instead of an object — normalize
+const INTAKE_MARKER = /^\s*(?:<<|\[\[)\s*INTAKE[_\s]*FORM(?:\s*:\s*(\w+))?\s*(?:>>|\]\])\s*$/i;
 function normalizeAction(action: any) {
   if (!action) return action;
   const raw = action.data;
@@ -48,12 +47,14 @@ export function BotMessageRouter(props: any) {
       // fall through
     }
   }
-  if (INTAKE_MARKER.test(message)) {
-    return <IntakeForm />;
+  const intakeMatch = message.match(INTAKE_MARKER);
+  if (intakeMatch) {
+    const scope = (intakeMatch[1] || '').toLowerCase();
+    const initial = scope === 'kayak' || scope === 'boat' ? scope : undefined;
+    return <IntakeForm initialTourType={initial as any} />;
   }
   const hasSlots = Array.isArray(action?.data?.data) && action.data.data.length > 0;
   if (action?.name === 'fare_harbor_action_check_availability' && hasSlots) {
-    // pass the NORMALIZED action back into the card
     return <TourAvailabilityCard {...props} data={{ ...props.data, action }} />;
   }
   if (action?.name === 'fare_harbor_action_get_payment_link' && action?.data?.data?.payment_link) {
