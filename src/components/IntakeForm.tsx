@@ -3,16 +3,21 @@ import { useMessages } from '@opencx/widget-react-headless';
 type TourType = 'kayak' | 'boat' | 'both';
 const label = { fontSize: 12, fontWeight: 600, color: '#44403C', marginBottom: 4, display: 'block' } as const;
 const inputStyle = { width: '100%', padding: '8px 10px', border: '1px solid #E7E5E4', borderRadius: 6, fontSize: 14, boxSizing: 'border-box' as const };
-export function IntakeForm() {
+export function IntakeForm({ initialTourType }: { initialTourType?: TourType }) {
   const today = new Date().toISOString().slice(0, 10);
   const [startDate, setStartDate] = useState(today);
   const [useDateRange, setUseDateRange] = useState(false);
   const [endDate, setEndDate] = useState(today);
   const [adults, setAdults] = useState(2);
   const [kidsUnder12, setKidsUnder12] = useState(0);
-  const [tourType, setTourType] = useState<TourType>('kayak');
+  const [tourType, setTourType] = useState<TourType>(initialTourType || 'kayak');
   const [submitted, setSubmitted] = useState(false);
   const { sendMessage } = useMessages();
+  const showTourTypeSelector = !initialTourType;
+  const headerTitle =
+    initialTourType === 'kayak' ? 'Check Kayak Tour Availability' :
+    initialTourType === 'boat' ? 'Check Boat Tour Availability' :
+    'Check Availability';
   const stepper = (value: number, setValue: (n: number) => void, min = 0, max = 20) => (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
       <button type="button" onClick={() => setValue(Math.max(min, value - 1))}
@@ -35,11 +40,13 @@ export function IntakeForm() {
   const handleSubmit = async () => {
     const fmtDate = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
     const dateText = useDateRange && endDate !== startDate
-      ? `between ${fmtDate(startDate)} and ${fmtDate(endDate)}`
-      : `on ${fmtDate(startDate)}`;
+      ? 'between ' + fmtDate(startDate) + ' and ' + fmtDate(endDate)
+      : 'on ' + fmtDate(startDate);
     const typeText = tourType === 'kayak' ? 'kayak tours' : tourType === 'boat' ? 'boat tours' : 'kayak and boat tours';
-    const kidText = kidsUnder12 > 0 ? ` and ${kidsUnder12} ${kidsUnder12 === 1 ? 'child' : 'children'} under 12` : '';
-    const message = `Check availability for ${typeText} ${dateText}. Party: ${adults} ${adults === 1 ? 'adult' : 'adults'}${kidText}. Show me every tour with openings.`;
+    const kidText = kidsUnder12 > 0
+      ? ' and ' + kidsUnder12 + ' ' + (kidsUnder12 === 1 ? 'child' : 'children') + ' under 12'
+      : '';
+    const message = 'Check availability for ' + typeText + ' ' + dateText + '. Party: ' + adults + ' ' + (adults === 1 ? 'adult' : 'adults') + kidText + '. Show me every tour with openings.';
     try {
       await (sendMessage as any)({ content: message });
       setSubmitted(true);
@@ -63,7 +70,7 @@ export function IntakeForm() {
   return (
     <div style={{ border: '1px solid #E7E5E4', borderRadius: 12, overflow: 'hidden', background: 'white' }}>
       <div style={{ padding: '10px 14px', background: '#0A6E76', color: 'white', fontWeight: 600, fontSize: 14 }}>
-        Check Availability
+        {headerTitle}
       </div>
       <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div>
@@ -80,14 +87,16 @@ export function IntakeForm() {
             <input type="date" value={endDate} min={startDate} onChange={(e) => setEndDate(e.target.value)} style={inputStyle} />
           </div>
         )}
-        <div>
-          <label style={label}>Tour type</label>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {typeBtn('kayak', 'Kayak Tours')}
-            {typeBtn('boat', 'Boat Tours')}
-            {typeBtn('both', 'Both')}
+        {showTourTypeSelector && (
+          <div>
+            <label style={label}>Tour type</label>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {typeBtn('kayak', 'Kayak Tours')}
+              {typeBtn('boat', 'Boat Tours')}
+              {typeBtn('both', 'Both')}
+            </div>
           </div>
-        </div>
+        )}
         <div style={{ display: 'flex', gap: 16 }}>
           <div style={{ flex: 1 }}>
             <label style={label}>Adults</label>
