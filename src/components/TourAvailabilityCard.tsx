@@ -1,9 +1,12 @@
+import { useEffect } from 'react';
 import { useMessages } from '@opencx/widget-react-headless';
 import { Markdown } from './Markdown';
 import { getTourPhoto, TOUR_PHOTOS } from '../data/tourPhotos';
+import { saveSearchContext, readSearchContext, contextSnippet } from '../data/searchContext';
 const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 const fmtDateShort = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+const toIsoYmd = (iso: string) => new Date(iso).toISOString().slice(0, 10);
 function extractTourName(message: string): string | undefined {
   if (!message) return undefined;
   const lower = message.toLowerCase();
@@ -29,6 +32,19 @@ export function TourAvailabilityCard(props: any) {
     : undefined;
   const tourName = extractTourName(message);
   const photo = getTourPhoto(tourName);
+  // Backfill context from slots if we don't already have richer context saved
+  useEffect(() => {
+    if (!slots || slots.length === 0) return;
+    const existing = readSearchContext();
+    if (existing) return;
+    const first = toIsoYmd(slots[0].start_at);
+    let latest = first;
+    for (const s of slots) {
+      const d = toIsoYmd(s.start_at);
+      if (d > latest) latest = d;
+    }
+    saveSearchContext({ startDate: first, endDate: latest !== first ? latest : null });
+  }, [slots]);
   const send = async (msg: string) => {
     try {
       await (sendMessage as any)({ content: msg });
@@ -47,7 +63,13 @@ export function TourAvailabilityCard(props: any) {
     send('Get payment link for ' + tour + ' on ' + date + ' at ' + time + ' (availability_pk: ' + slot.availability_pk + ')');
   };
   const learnMore = () => {
-    if (tourName) send('Tell me more about ' + tourName);
+    if (!tourName) return;
+    const ctx = readSearchContext();
+    const snippet = contextSnippet(ctx);
+    const msg = snippet
+      ? 'Tell me more about ' + tourName + '. Also check availability for the dates I already asked about: ' + snippet + '.'
+      : 'Tell me more about ' + tourName + '.';
+    send(msg);
   };
   if (!slots || slots.length === 0) {
     return (
