@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { useMessages } from '@opencx/widget-react-headless';
 import { Markdown } from './Markdown';
 import { getTourPhoto } from '../data/tourPhotos';
+import { saveSearchContext, readSearchContext, contextSnippet } from '../data/searchContext';
 type Result = {
   tour: string;
   date: string;
@@ -9,8 +11,34 @@ type Result = {
   availability_pk: number;
   seats: number;
 };
+// Normalize a "Jul 23" or "Aug 15" style string to YYYY-MM-DD using the current or next year
+function toIsoDate(dateLabel: string): string | null {
+  if (!dateLabel) return null;
+  const now = new Date();
+  const attempt = new Date(dateLabel + ', ' + now.getFullYear());
+  if (isNaN(attempt.getTime())) return null;
+  // If parsed date is well in the past, roll to next year
+  if (attempt.getTime() < now.getTime() - 30 * 24 * 60 * 60 * 1000) {
+    attempt.setFullYear(now.getFullYear() + 1);
+  }
+  return attempt.toISOString().slice(0, 10);
+}
 export function AvailabilityResultsCard({ results, lead }: { results: Result[]; lead?: string }) {
   const { sendMessage } = useMessages();
+  // Backfill context from results — only if intake form didn't already save richer context
+  useEffect(() => {
+    if (!results?.length) return;
+    const existing = readSearchContext();
+    if (existing) return; // don't overwrite intake-form context that has party info
+    const iso = toIsoDate(results[0].date);
+    if (!iso) return;
+    let latest = iso;
+    for (const r of results) {
+      const d = toIsoDate(r.date);
+      if (d && d > latest) latest = d;
+    }
+    saveSearchContext({ startDate: iso, endDate: latest !== iso ? latest : null });
+  }, [results]);
   const send = async (msg: string) => {
     try {
       await (sendMessage as any)({ content: msg });
@@ -24,7 +52,14 @@ export function AvailabilityResultsCard({ results, lead }: { results: Result[]; 
   };
   const book = (r: Result) =>
     send('Get payment link for ' + r.tour + ' on ' + r.date + ' at ' + r.time + ' (availability_pk: ' + r.availability_pk + ')');
-  const learnMore = (tour: string) => send('Tell me more about ' + tour);
+  const learnMore = (tour: string) => {
+    const ctx = readSearchContext();
+    const snippet = contextSnippet(ctx);
+    const msg = snippet
+      ? 'Tell me more about ' + tour + '. Also check availability for the dates I already asked about: ' + snippet + '.'
+      : 'Tell me more about ' + tour + '.';
+    send(msg);
+  };
   if (!results?.length) return null;
   const groups: { tour: string; slots: Result[] }[] = [];
   const seen: Record<string, number> = {};
