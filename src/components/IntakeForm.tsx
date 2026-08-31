@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMessages } from '@opencx/widget-react-headless';
+import { saveSearchContext } from '../data/searchContext';
 type TourType = 'kayak' | 'boat' | 'both';
 const label = { fontSize: 12, fontWeight: 600, color: '#44403C', marginBottom: 4, display: 'block' } as const;
 const inputStyle = { width: '100%', padding: '8px 10px', border: '1px solid #E7E5E4', borderRadius: 6, fontSize: 14, boxSizing: 'border-box' as const };
@@ -51,6 +52,13 @@ export function IntakeForm({ initialTourType }: { initialTourType?: TourType }) 
       ? ' and ' + kidsUnder12 + ' ' + (kidsUnder12 === 1 ? 'child' : 'children') + ' under 12'
       : '';
     const message = 'Check availability for ' + typeText + ' ' + dateText + '. Party: ' + adults + ' ' + (adults === 1 ? 'adult' : 'adults') + kidText + '. Show me every tour with openings.';
+    // Save search context so "Learn more" can reuse the same dates + party
+    saveSearchContext({
+      startDate,
+      endDate: useDateRange ? endDate : null,
+      adults,
+      kidsUnder12,
+    });
     try {
       await (sendMessage as any)({ content: message });
       setSubmitted(true);
