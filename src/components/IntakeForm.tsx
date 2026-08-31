@@ -18,6 +18,10 @@ export function IntakeForm({ initialTourType }: { initialTourType?: TourType }) 
     initialTourType === 'kayak' ? 'Check Kayak Tour Availability' :
     initialTourType === 'boat' ? 'Check Boat Tour Availability' :
     'Check Availability';
+  const narrative =
+    initialTourType === 'kayak' ? "Explore mangrove tunnels, bird rookeries, and quiet backwaters. Ask me anything below, or use the form to see what's open on your dates." :
+    initialTourType === 'boat' ? "Cruise to shelling beaches, sunset bird rookeries, and hidden islands. Ask me anything below, or use the form to see what's open on your dates." :
+    "Not sure which tour yet? Use the form below to see everything open on your dates, or just ask me a question.";
   const stepper = (value: number, setValue: (n: number) => void, min = 0, max = 20) => (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
       <button type="button" onClick={() => setValue(Math.max(min, value - 1))}
@@ -71,6 +75,9 @@ export function IntakeForm({ initialTourType }: { initialTourType?: TourType }) 
     <div style={{ border: '1px solid #E7E5E4', borderRadius: 12, overflow: 'hidden', background: 'white' }}>
       <div style={{ padding: '10px 14px', background: '#0A6E76', color: 'white', fontWeight: 600, fontSize: 14 }}>
         {headerTitle}
+      </div>
+      <div style={{ padding: '10px 14px', fontSize: 13, color: '#57534E', lineHeight: 1.5, borderBottom: '1px solid #F5F5F4', background: '#FAFAF9' }}>
+        {narrative}
       </div>
       <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div>
