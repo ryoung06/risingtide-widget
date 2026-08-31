@@ -29,11 +29,7 @@ export function TourAvailabilityCard(props: any) {
     : undefined;
   const tourName = extractTourName(message);
   const photo = getTourPhoto(tourName);
-  const book = async (slot: any) => {
-    const time = fmtTime(slot.start_at);
-    const date = fmtDateShort(slot.start_at);
-    const tour = tourName || 'this tour';
-    const msg = 'Get payment link for ' + tour + ' on ' + date + ' at ' + time + ' (availability_pk: ' + slot.availability_pk + ')';
+  const send = async (msg: string) => {
     try {
       await (sendMessage as any)({ content: msg });
     } catch (e1) {
@@ -43,6 +39,15 @@ export function TourAvailabilityCard(props: any) {
         console.error('[TourAvailabilityCard] sendMessage failed', e1, e2);
       }
     }
+  };
+  const book = (slot: any) => {
+    const time = fmtTime(slot.start_at);
+    const date = fmtDateShort(slot.start_at);
+    const tour = tourName || 'this tour';
+    send('Get payment link for ' + tour + ' on ' + date + ' at ' + time + ' (availability_pk: ' + slot.availability_pk + ')');
+  };
+  const learnMore = () => {
+    if (tourName) send('Tell me more about ' + tourName);
   };
   if (!slots || slots.length === 0) {
     return (
@@ -56,8 +61,27 @@ export function TourAvailabilityCard(props: any) {
       {photo && (
         <img src={photo} alt={tourName || 'Tour'} style={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }} />
       )}
-      <div style={{ padding: '10px 14px', background: '#0A6E76', color: 'white', fontWeight: 600, fontSize: 14 }}>
-        {tourName ? tourName + ' — ' + fmtDate(slots[0].start_at) : fmtDate(slots[0].start_at)}
+      <div style={{ padding: '10px 14px', background: '#0A6E76', color: 'white', fontWeight: 600, fontSize: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+        <span>{tourName ? tourName + ' — ' + fmtDate(slots[0].start_at) : fmtDate(slots[0].start_at)}</span>
+        {tourName && (
+          <button
+            type="button"
+            onClick={learnMore}
+            style={{
+              background: 'rgba(255,255,255,0.15)',
+              color: 'white',
+              border: '1px solid rgba(255,255,255,0.3)',
+              padding: '3px 8px',
+              borderRadius: 4,
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Learn more
+          </button>
+        )}
       </div>
       <div style={{ padding: '4px 14px' }}>
         {slots.map((slot: any, i: number) => {
