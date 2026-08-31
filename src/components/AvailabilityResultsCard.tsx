@@ -11,8 +11,7 @@ type Result = {
 };
 export function AvailabilityResultsCard({ results, lead }: { results: Result[]; lead?: string }) {
   const { sendMessage } = useMessages();
-  const book = async (r: Result) => {
-    const msg = 'Get payment link for ' + r.tour + ' on ' + r.date + ' at ' + r.time + ' (availability_pk: ' + r.availability_pk + ')';
+  const send = async (msg: string) => {
     try {
       await (sendMessage as any)({ content: msg });
     } catch (e1) {
@@ -23,6 +22,9 @@ export function AvailabilityResultsCard({ results, lead }: { results: Result[]; 
       }
     }
   };
+  const book = (r: Result) =>
+    send('Get payment link for ' + r.tour + ' on ' + r.date + ' at ' + r.time + ' (availability_pk: ' + r.availability_pk + ')');
+  const learnMore = (tour: string) => send('Tell me more about ' + tour);
   if (!results?.length) return null;
   const groups: { tour: string; slots: Result[] }[] = [];
   const seen: Record<string, number> = {};
@@ -49,9 +51,29 @@ export function AvailabilityResultsCard({ results, lead }: { results: Result[]; 
                 <img src={photo} alt={g.tour} style={{ width: 88, height: 88, objectFit: 'cover', flexShrink: 0 }} />
               )}
               <div style={{ flex: 1, padding: '8px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.3, color: '#0A6E76' }}>{g.tour}</div>
+                <button
+                  type="button"
+                  onClick={() => learnMore(g.tour)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    textAlign: 'left',
+                    fontWeight: 600,
+                    fontSize: 14,
+                    lineHeight: 1.3,
+                    color: '#0A6E76',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                    textDecorationStyle: 'dotted',
+                    textUnderlineOffset: 3,
+                  }}
+                  title={'Learn more about ' + g.tour}
+                >
+                  {g.tour}
+                </button>
                 <div style={{ fontSize: 11, color: '#78716C', marginTop: 2 }}>
-                  {g.slots.length} {g.slots.length === 1 ? 'option' : 'options'}
+                  {g.slots.length} {g.slots.length === 1 ? 'option' : 'options'} · tap name to learn more
                 </div>
               </div>
             </div>
